@@ -1,0 +1,12 @@
+[2025-01-01 23:53:36] [DEBUG] This is a debug message.
+[2025-01-01 23:53:37] [WARN] This is a warning.
+[2025-01-01 23:53:37] [ERROR] An error occurred.
+[2025-01-01 23:55:35] [DEBUG] This is a debug message.
+[2025-01-01 23:55:35] [WARN] This is a warning.
+[2025-01-01 23:55:35] [ERROR] An error occurred.
+[2025-01-02 00:11:21] [DEBUG] This is a debug message.
+[2025-01-02 00:11:21] [ERROR] An error occurred.
+[2025-01-02 00:11:21] [WARN] This is a warning.
+[2025-01-02 00:19:47] [DEBUG] This is a debug message.
+[2025-01-02 00:19:47] [ERROR] An error occurred.
+[2025-01-02 00:19:47] [WARN] This is a warning.

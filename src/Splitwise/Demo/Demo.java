@@ -27,6 +27,11 @@ public class Demo {
         splitManager.unevenDistributionAmongUsers(b, 5000);
         splitManager.showDebtOfEachUserAll();
 
+
+        System.out.println("\nUneven distribution for Aryan:");
+        splitManager.unevenDistributionAmongUsers(c, 4000);
+        splitManager.showDebtOfEachUserAll();
+
         System.out.println("\nSettling Shubham's payment:");
         splitManager.settlePayment(b, b.getAmount());
         splitManager.showDebtOfEachUserAll();

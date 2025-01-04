@@ -7,9 +7,8 @@ enum PieceColor {
     WHITE, BLACK
 }
 
-enum StatusOfGame{
-
-        }
+enum StatusOfGame {
+}
 
 enum PieceType {
     PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
@@ -17,26 +16,109 @@ enum PieceType {
 
 class GameStatus {
     public boolean isCheck(Board board, PieceColor currentPlayer) {
-        // Logic to check if the current player's king is in check.
-        return false; // Placeholder
+        int kingX = -1, kingY = -1;
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board.getPiece(i, j);
+                if (piece != null && piece.type == PieceType.KING && piece.color == currentPlayer) {
+                    kingX = i;
+                    kingY = j;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board.getPiece(i, j);
+                if (piece != null && piece.color != currentPlayer) {
+                    Move move = new Move(i, j, kingX, kingY);
+                    if (piece.isValidMove(move, board)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public boolean isCheckmate(Board board, PieceColor currentPlayer) {
-        // Logic to check if the current player's king is in checkmate.
-        return false; // Placeholder
+        if (!isCheck(board, currentPlayer)) {
+            return false;
+        }
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board.getPiece(i, j);
+                if (piece != null && piece.color == currentPlayer) {
+                    for (int x = 0; x < 8; x++) {
+                        for (int y = 0; y < 8; y++) {
+                            Move move = new Move(i, j, x, y);
+                            if (piece.isValidMove(move, board)) {
+                                Piece original = board.getPiece(x, y);
+                                board.movePiece(move);
+                                boolean stillInCheck = isCheck(board, currentPlayer);
+                                board.undoMove(move, original);
+                                if (!stillInCheck) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public boolean isStalemate(Board board, PieceColor currentPlayer) {
-        // Logic to check if the game is in stalemate.
-        return false; // Placeholder
+        if (isCheck(board, currentPlayer)) {
+            return false;
+        }
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board.getPiece(i, j);
+                if (piece != null && piece.color == currentPlayer) {
+                    for (int x = 0; x < 8; x++) {
+                        for (int y = 0; y < 8; y++) {
+                            Move move = new Move(i, j, x, y);
+                            if (piece.isValidMove(move, board)) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public boolean isDraw(Board board) {
-        // Logic to determine if the game is a draw (e.g., insufficient material).
-        return false; // Placeholder
+        List<Piece> pieces = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board.getPiece(i, j);
+                if (piece != null) {
+                    pieces.add(piece);
+                }
+            }
+        }
+
+        if (pieces.size() == 2) {
+            return true;
+        }
+        if (pieces.size() == 3) {
+            for (Piece piece : pieces) {
+                if (piece.type == PieceType.KNIGHT || piece.type == PieceType.BISHOP) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
-
 
 class Move {
     int startX, startY, endX, endY;
@@ -235,6 +317,12 @@ class Board {
         System.out.println();
     }
 
+    public void undoMove(Move move, Piece capturedPiece) {
+        Piece piece = getPiece(move.endX, move.endY);
+        board[move.startX][move.startY] = piece;
+        board[move.endX][move.endY] = capturedPiece;
+    }
+
     public void displayBoard() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -252,302 +340,54 @@ class Board {
 public class Demo {
     public static void main(String[] args) {
         Board board = new Board();
+        GameStatus gameStatus = new GameStatus();
+        PieceColor currentPlayer = PieceColor.WHITE;
+
         board.displayBoard();
 
-        Move move1 = new Move(6, 0, 4, 0); // White pawn moves 2 steps
+        Move move1 = new Move(6, 0, 4, 0);
         board.movePiece(move1);
 
-        Move move2 = new Move(1, 0, 3, 0); // Black pawn moves 2 steps
+        if (gameStatus.isCheck(board, currentPlayer)) {
+            System.out.println("Check!");
+        } else if (gameStatus.isCheckmate(board, currentPlayer)) {
+            System.out.println("Checkmate!");
+        } else if (gameStatus.isStalemate(board, currentPlayer)) {
+            System.out.println("Stalemate!");
+        } else if (gameStatus.isDraw(board)) {
+            System.out.println("Draw!");
+        }
+
+        currentPlayer = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+
+        Move move2 = new Move(1, 0, 3, 0);
         board.movePiece(move2);
 
-        Move move3 = new Move(7, 1, 5, 2); // White knight moves
+        if (gameStatus.isCheck(board, currentPlayer)) {
+            System.out.println("Check!");
+        } else if (gameStatus.isCheckmate(board, currentPlayer)) {
+            System.out.println("Checkmate!");
+        } else if (gameStatus.isStalemate(board, currentPlayer)) {
+            System.out.println("Stalemate!");
+        } else if (gameStatus.isDraw(board)) {
+            System.out.println("Draw!");
+        }
+
+        currentPlayer = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+
+        Move move3 = new Move(7, 1, 5, 2);
         board.movePiece(move3);
+
+        if (gameStatus.isCheck(board, currentPlayer)) {
+            System.out.println("Check!");
+        } else if (gameStatus.isCheckmate(board, currentPlayer)) {
+            System.out.println("Checkmate!");
+        } else if (gameStatus.isStalemate(board, currentPlayer)) {
+            System.out.println("Stalemate!");
+        } else if (gameStatus.isDraw(board)) {
+            System.out.println("Draw!");
+        }
 
         board.displayBoard();
     }
 }
-
-
-/*
-*
-* To implement the functionality to check for Check, Checkmate, Stalemate, and Draw, follow these steps:
-
-
----
-
-1. Check if the King is in Check
-
-A king is in check if it is under attack by any opponent piece.
-
-Steps:
-
-Locate the king's position on the board.
-
-Check if any opponent piece has a valid move that targets the king's position.
-
-
-Code:
-
-public boolean isCheck(Board board, PieceColor currentPlayer) {
-    int kingX = -1, kingY = -1;
-
-    // Find the king's position
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            Piece piece = board.getPiece(i, j);
-            if (piece != null && piece.type == PieceType.KING && piece.color == currentPlayer) {
-                kingX = i;
-                kingY = j;
-                break;
-            }
-        }
-    }
-
-    // Check if any opponent piece can attack the king
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            Piece piece = board.getPiece(i, j);
-            if (piece != null && piece.color != currentPlayer) {
-                Move move = new Move(i, j, kingX, kingY);
-                if (piece.isValidMove(move, board)) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-
----
-
-2. Checkmate
-
-A player is in checkmate if:
-
-1. The king is in check.
-
-
-2. The king cannot escape by moving to a valid position.
-
-
-3. No other piece can block or capture the attacking piece.
-
-
-
-Code:
-
-public boolean isCheckmate(Board board, PieceColor currentPlayer) {
-    if (!isCheck(board, currentPlayer)) {
-        return false;
-    }
-
-    // Check if the king has any valid moves to escape
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            Piece piece = board.getPiece(i, j);
-            if (piece != null && piece.color == currentPlayer) {
-                for (int x = 0; x < 8; x++) {
-                    for (int y = 0; y < 8; y++) {
-                        Move move = new Move(i, j, x, y);
-                        if (piece.isValidMove(move, board)) {
-                            // Simulate the move
-                            Piece original = board.getPiece(x, y);
-                            board.movePiece(move);
-                            boolean stillInCheck = isCheck(board, currentPlayer);
-                            board.undoMove(move, original); // Revert the move
-
-                            if (!stillInCheck) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return true;
-}
-
-
----
-
-3. Stalemate
-
-A player is in stalemate if:
-
-1. The king is NOT in check.
-
-
-2. The player has no legal moves available.
-
-
-
-Code:
-
-public boolean isStalemate(Board board, PieceColor currentPlayer) {
-    if (isCheck(board, currentPlayer)) {
-        return false;
-    }
-
-    // Check if the player has any valid moves
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            Piece piece = board.getPiece(i, j);
-            if (piece != null && piece.color == currentPlayer) {
-                for (int x = 0; x < 8; x++) {
-                    for (int y = 0; y < 8; y++) {
-                        Move move = new Move(i, j, x, y);
-                        if (piece.isValidMove(move, board)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return true;
-}
-
-
----
-
-4. Draw
-
-A game is a draw if:
-
-1. Insufficient material to checkmate (e.g., only kings left).
-
-
-2. Repeated moves (threefold repetition, which requires additional tracking).
-
-
-3. Fifty-move rule (50 moves without a pawn move or capture).
-
-
-
-Code for Insufficient Material:
-
-public boolean isDraw(Board board) {
-    List<Piece> pieces = new ArrayList<>();
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            Piece piece = board.getPiece(i, j);
-            if (piece != null) {
-                pieces.add(piece);
-            }
-        }
-    }
-
-    // Check for insufficient material
-    if (pieces.size() == 2) {
-        return true; // Only two kings
-    }
-    if (pieces.size() == 3) {
-        for (Piece piece : pieces) {
-            if (piece.type == PieceType.KNIGHT || piece.type == PieceType.BISHOP) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
----
-
-Integration Notes:
-
-After every move, evaluate the game state using these methods.
-
-Combine isCheck, isCheckmate, isStalemate, and isDraw in GameStatus for comprehensive evaluation.
-
-To include a GameStatus class that checks conditions like check, checkmate, stalemate, or draw, you can:
-
-1. Create the GameStatus class:
-
-This class will evaluate the board's state after every move and determine the current status of the game.
-
-
-
-2. Integrate GameStatus in the ChessGame class:
-
-After every move, call the GameStatus methods to evaluate the status of the game.
-
-
-
-
-
----
-
-Steps:
-
-1. Create GameStatus class:
-
-Define methods to evaluate: isCheck(), isCheckmate(), isStalemate(), and isDraw().
-
-
-
-2. Modify ChessGame:
-
-Add an instance of GameStatus.
-
-After each move, call methods from GameStatus to check and update the game's state.
-
-
-
-3. Modify Board:
-
-Ensure the board has a method to determine all valid moves for a given color. This will help the GameStatus class detect stalemate or checkmate.
-
-
-
-
-
----
-
-Example Code Integration Points:
-
-Add the GameStatus class:
-Add a new class in the same file:
-
-class GameStatus {
-    public boolean isCheck(Board board, PieceColor currentPlayer) {
-        // Logic to check if the current player's king is in check.
-        return false; // Placeholder
-    }
-
-    public boolean isCheckmate(Board board, PieceColor currentPlayer) {
-        // Logic to check if the current player's king is in checkmate.
-        return false; // Placeholder
-    }
-
-    public boolean isStalemate(Board board, PieceColor currentPlayer) {
-        // Logic to check if the game is in stalemate.
-        return false; // Placeholder
-    }
-
-    public boolean isDraw(Board board) {
-        // Logic to determine if the game is a draw (e.g., insufficient material).
-        return false; // Placeholder
-    }
-}
-
-In ChessGame, after movePiece:
-
-GameStatus gameStatus = new GameStatus();
-PieceColor currentPlayer = PieceColor.WHITE; // Track current player.
-
-if (gameStatus.isCheck(board, currentPlayer)) {
-    System.out.println("Check!");
-} else if (gameStatus.isCheckmate(board, currentPlayer)) {
-    System.out.println("Checkmate!");
-} else if (gameStatus.isStalemate(board, currentPlayer)) {
-    System.out.println("Stalemate!");
-} else if (gameStatus.isDraw(board)) {
-    System.out.println("Draw!");
-}
-
-// Switch player turn.
-currentPlayer = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
-* */
